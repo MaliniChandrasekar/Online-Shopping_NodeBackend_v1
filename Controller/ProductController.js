@@ -59,17 +59,6 @@ exports.insert = [
     }
 ];
 
-
-exports.list = (req, res) => {
-    Product.find()
-    .then((products) => {
-        return res.status(200).json(products); // Sending JSON response containing users
-    })
-    .catch((err) => {
-        return res.status(500).json({ error: err.message }); // Sending JSON response for errors
-    });
-};
-
 exports.update = [
     uploader.single('image'), // Middleware for uploading single file (image)
     (req, res) => {
@@ -118,3 +107,31 @@ exports.listByCategory = (req, res) => {
             return res.status(500).json({ error: err.message }); // Sending JSON response for errors
         });
 };
+
+exports.list = (req, res) => {
+    Product.find()
+    .then((products) => {
+        return res.status(200).json(products); // Sending JSON response containing users
+    })
+    .catch((err) => {
+        return res.status(500).json({ error: err.message }); // Sending JSON response for errors
+    });
+};
+
+
+// exports.list = (req, res) => {
+//     // define page and limit per page
+//     let page = parseInt(req.query.page) || 1;
+//     const limit = 3;
+
+//     // calculate skip based on page
+//     const skip = (page - 1) * limit;
+
+//     Product.find().sort("title").skip(skip).limit(limit * page)
+//     .then((products) => {
+//         return res.status(200).send(products);
+//     })
+//     .catch((err) => {
+//         return res.status(500).send(err.message);
+//     });
+// };

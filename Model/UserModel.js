@@ -7,8 +7,11 @@ var UserSchema = new Schema({
     lastname : {type : String, required : true},
     password : {type : String, required : true},
     email : {type : String, required : true},
-    city : {type : String, required : true},
-    role : {type : String, default : "user"}
+    role : {type : String, default : "user"},
+    address : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Address"
+    }
     // likes : {type : Number, required : true, default : 0.0}
 }, {timestamps : true});
 
