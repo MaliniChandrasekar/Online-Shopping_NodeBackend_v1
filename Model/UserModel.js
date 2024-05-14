@@ -11,7 +11,11 @@ var UserSchema = new Schema({
     address : {
         type : mongoose.Schema.Types.ObjectId,
         ref : "Address"
-    }
+    },
+    deliveryAddresses: [{ // Initialize deliveryAddresses as an empty array
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DAddress"
+    }]
     // likes : {type : Number, required : true, default : 0.0}
 }, {timestamps : true});
 

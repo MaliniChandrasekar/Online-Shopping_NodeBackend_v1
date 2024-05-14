@@ -75,7 +75,11 @@ exports.getUserCart = async (req, res) => {
             return res.status(404).json({ error: 'Cart not found' });
         }
 
-        res.status(200).json(cart);
+        // Calculate the count of products in the cart
+        const productCount = cart.items.reduce((total, item) => total + item.quantity, 0);
+
+        // Send the cart data along with the count of products
+        res.status(200).json({ cart, productCount });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -142,7 +146,7 @@ for (const item of userCart.items) {
 
 exports.deleteCartItems = async (req, res) => {
     try {
-      const userId = req.body.userId;
+      const userId = req.params.userId;
       // Find the user's cart and delete its items
       const cart = await Cart.findOne({ user: userId });
       if (!cart) {

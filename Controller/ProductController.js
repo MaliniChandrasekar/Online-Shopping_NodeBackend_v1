@@ -108,7 +108,7 @@ exports.listByCategory = (req, res) => {
         });
 };
 
-exports.list = (req, res) => {
+exports.listPage = (req, res) => {
     Product.find()
     .then((products) => {
         return res.status(200).json(products); // Sending JSON response containing users
@@ -119,19 +119,27 @@ exports.list = (req, res) => {
 };
 
 
-// exports.list = (req, res) => {
-//     // define page and limit per page
-//     let page = parseInt(req.query.page) || 1;
-//     const limit = 3;
+exports.list = (req, res) => {
+    // Define page and limit per page
+    let page = parseInt(req.query.page) || 1;
+    const perPage = 9; // Display 12 products per page
 
-//     // calculate skip based on page
-//     const skip = (page - 1) * limit;
+    // Calculate skip based on page
+    const skip = page > 1 ? (page - 1) * perPage : 0;
 
-//     Product.find().sort("title").skip(skip).limit(limit * page)
-//     .then((products) => {
-//         return res.status(200).send(products);
-//     })
-//     .catch((err) => {
-//         return res.status(500).send(err.message);
-//     });
-// };
+    // Set the limit to perPage
+    const limit = perPage;
+
+    Product.find().sort("productname").skip(skip).limit(limit)
+    .then((products) => {
+        return res.status(200).send(products);
+    })
+    .catch((err) => {
+        return res.status(500).send(err.message);
+    });
+};
+
+
+
+
+

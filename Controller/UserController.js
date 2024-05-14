@@ -3,6 +3,8 @@ const Address = require("../Model/AddressModel")
 const { body, sanitizeBody, validationResult } = require("express-validator")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
+const DAddress = require("../Model/DeliveryAddress")
+const Order = require("../Model/OrderModel")
 
 exports.insert = [
     body("firstname").trim().isAlphanumeric().withMessage("Firstname can contain only letters"),
@@ -105,6 +107,22 @@ exports.list = (req, res) => {
         });
 };
 
+exports.getUserById = (req, res) => {
+    const userId = req.params.id; // Extract userId from request parameters
+
+    User.findById(userId).populate('address') // Find user by ID and populate the address field
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' }); // User not found error if user with given ID does not exist
+            }
+            return res.status(200).json(user); // Sending JSON response containing the user with populated address
+        })
+        .catch((err) => {
+            return res.status(500).json({ error: err.message }); // Sending JSON response for errors
+        });
+};
+
+
 exports.update = [
     body("firstname").trim().isAlphanumeric().withMessage("Firstname can contain only letters"),
     body("lastname").trim().isAlphanumeric().withMessage("Lastname can contain only letters"),
@@ -196,3 +214,79 @@ exports.address = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch user data' });
     }
 };
+
+exports.addDeliveryAddress = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { doorno, street, city, state, pincode } = req.body;
+
+        // Find the user by userId
+        const user = await User.findById(userId);
+
+        console.log('userId:', userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Check if the user already has an order
+        let order = await Order.findOne({ user: userId });
+
+        // If the user doesn't have an order, create a new one
+        if (!order) {
+            // Create an empty order
+            order = new Order({
+                user: userId,
+                items: [],
+                deliveryAddress: null // No delivery address initially
+            });
+        }
+
+        await DAddress.findOneAndDelete({ user: userId });
+
+        // Create a new delivery address instance
+        const daddress = new DAddress({
+            doorno,
+            street,
+            city,
+            state,
+            pincode,
+            user: userId
+        });
+
+        // Save the delivery address
+        await daddress.save();
+
+        // Add the delivery address to the order
+        order.deliveryAddress = daddress._id;
+        
+        // Save the order
+        await order.save();
+
+        res.status(201).json({ success: true, message: 'Delivery address added successfully', daddress, order });
+    } catch (error) {
+        console.error('Error adding delivery address:', error);
+        res.status(500).json({ success: false, message: 'Failed to add delivery address', error: error.message });
+    }
+};
+
+exports.checkDaddress = async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        // Query the address collection to check if the user has an address
+        const dAddress = await DAddress.findOne({ user: userId });
+
+        if (dAddress) {
+            // If the user has an address, return success status
+            res.status(200).json({ hasAddress: true });
+        } else {
+            // If the user does not have an address, return not found status
+            res.status(404).json({ hasAddress: false });
+        }
+    } catch (error) {
+        // If an error occurs, return internal server error status
+        console.error('Error checking user address:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
